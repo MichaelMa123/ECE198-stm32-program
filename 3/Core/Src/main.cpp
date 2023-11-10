@@ -89,10 +89,6 @@ int standerd_dev(int array[],std::size_t n,int mean)
 	final=sqrt(final);
 	return final;
 }
-bool compare()
-{
-
-}
 
 int peak_finder()
 {
@@ -177,15 +173,24 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_buf,ADC_BUF_LED);
   std::vector<int> Time{0};
+  unsigned int count{0};
   /* USER CODE END 2 */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
-
 	  int time_beat{peak_finder()};
 	  Time.push_back(time_beat);
+	  if(Time[Time. size()-2]!=0)
+	  {
+		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
+		  count++;
+		  if(count==100)
+		  {
+			  count=0;
+		  }
+	  }
 
     /* USER CODE BEGIN 3 */
   }
