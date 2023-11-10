@@ -100,10 +100,11 @@ int peak_finder(int array[],int size)
 	int influence{};
 	int millis = HAL_GetTick();
 	enable_delay();
-	uint32_t raw {};
-	uint32_t raw2{};
+	int raw{};
+	int raw2{};
 	return millis;
 	uint32_t times{86000};
+	int t2{1000};
 	bool peak{true};
 	delay(times);
 	std::vector<uint32_t> slops{};
@@ -116,10 +117,10 @@ int peak_finder(int array[],int size)
 		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 		raw2=HAL_ADC_GetValue(&hadc1);
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		long int slope{(raw2-raw)/times};
+		long int slope{(raw2-raw)/t2};
 
 		slops.push_back(slope);
-		if(slops[slops. size()-2]>0&&slops[slops.size()-1]<0)
+		if(	slops[slops. size()-2]>0&&slops[slops.size()-1]<0)
 		{
 
 
