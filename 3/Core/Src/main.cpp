@@ -35,7 +35,7 @@
 /* USER CODE BEGIN PD */
 int mean(int array[],std::size_t n);
 int standerd_dev(int array[],std::size_t n,int mean);
-int peak_finder(int array[],size);
+int peak_finder(int array[],int size);
 
 /* USER CODE END PD */
 
@@ -92,7 +92,7 @@ bool compare()
 {
 
 }
-int peak_finder(int array[],size)
+int peak_finder(int array[],int size)
 {
 	int lag{};
 	int threshold{};
@@ -102,6 +102,8 @@ int peak_finder(int array[],size)
 	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 	int raw = HAL_ADC_GetValue(&hadc1);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+	return millis;
+
 
 }
 void enable_delay(void)
