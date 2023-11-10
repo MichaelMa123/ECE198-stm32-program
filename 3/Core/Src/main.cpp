@@ -95,9 +95,6 @@ bool compare()
 }
 int peak_finder(int array[],int size)
 {
-	int lag{};
-	int threshold{};
-	int influence{};
 	int millis = HAL_GetTick();
 	enable_delay();
 	int raw{};
@@ -120,10 +117,10 @@ int peak_finder(int array[],int size)
 		long int slope{(raw2-raw)/t2};
 
 		slops.push_back(slope);
-		if(	slops[slops. size()-2]>0&&slops[slops.size()-1]<0)
+		if(	slops[slops. size()-2]>=0&&slops[slops.size()-1]<=0)
 		{
-
-
+			int millis = HAL_GetTick();
+			return millis;
 		}
 
 
