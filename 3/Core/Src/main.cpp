@@ -35,6 +35,7 @@
 /* USER CODE BEGIN PD */
 int mean(int array[],std::size_t n);
 int standerd_dev(int array[],std::size_t n,int mean);
+int peak_finder(int array[],size);
 
 /* USER CODE END PD */
 
@@ -57,6 +58,8 @@ uint16_t adc_buf[ADC_BUF_LED];
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+void enable_delay(void);
+void delay(uint32_t tick);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -88,6 +91,34 @@ int standerd_dev(int array[],std::size_t n,int mean)
 bool compare()
 {
 
+}
+int peak_finder(int array[],size)
+{
+	int lag{};
+	int threshold{};
+	int influence{};
+	int millis = HAL_GetTick();
+	enable_delay();
+	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+	int raw = HAL_ADC_GetValue(&hadc1);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+
+}
+void enable_delay(void)
+{
+	DWT->CYCCNT = 0;
+	CoreDebug->DEMCR |= 0x01000000;
+	DWT->CTRL |= 1;
+}
+void delay(uint32_t tick)
+{
+	uint32_t start = DWT->CYCCNT;
+	uint32_t current = 0;
+do
+{
+	current = DWT->CYCCNT;
+}
+while((current - start) < tick);
 }
 
 /* USER CODE END 0 */
