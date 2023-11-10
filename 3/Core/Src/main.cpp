@@ -36,7 +36,7 @@
 /* USER CODE BEGIN PD */
 int mean(int array[],std::size_t n);
 int standerd_dev(int array[],std::size_t n,int mean);
-int peak_finder(int array[],int size);
+int peak_finder();
 
 /* USER CODE END PD */
 
@@ -93,7 +93,8 @@ bool compare()
 {
 
 }
-int peak_finder(int array[],int size)
+
+int peak_finder()
 {
 	int millis = HAL_GetTick();
 	enable_delay();
@@ -122,14 +123,7 @@ int peak_finder(int array[],int size)
 			int millis = HAL_GetTick();
 			return millis;
 		}
-
-
 	}
-
-
-
-
-
 }
 void enable_delay(void)
 {
@@ -182,13 +176,16 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_buf,ADC_BUF_LED);
+  std::vector<int> Time{0};
   /* USER CODE END 2 */
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
+
+	  int time_beat{peak_finder()};
+	  Time.push_back(time_beat);
 
     /* USER CODE BEGIN 3 */
   }
