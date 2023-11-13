@@ -177,23 +177,35 @@ int main(void)
   /* USER CODE END 2 */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  bool compaired {false};
+  int mean_rate{};
+  int std_dev{};
   while (1)
   {
-    /* USER CODE END WHILE */
 	  int time_beat{peak_finder()};
-	  Time.push_back(time_beat);
-	  if(Time[Time. size()-2]!=0)
-	  {
-		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
-		  count++;
-		  if(count==100)
-		  {
-			  count=0;
-		  }
-	  }
+	  	  Time.push_back(time_beat);
+	  	  if(Time[Time. size()-2]!=0)
+	  	  {
+	  		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
+	  		  count++;
+	  		  if(count==100)
+	  		  {
+	  			  count=0;
+	  			  compaired=true;
+
+	  		  }
+	  	  }
+	  	  if(compaired&&(count%10==0))
+	  	  {
+	  		  mean_rate=mean(heart,cap);
+	  		  std_dev=standerd_dev(heart,cap,mean_rate);
+	  	  }
+  }
+    /* USER CODE END WHILE */
+
 
     /* USER CODE BEGIN 3 */
-  }
+
   /* USER CODE END 3 */
 }
 
