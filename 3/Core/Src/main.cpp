@@ -183,6 +183,7 @@ int main(void)
   int warning{};
   unsigned int cycle_count{};
   unsigned int warning_cycle{};
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12,GPIO_PIN_RESET);
   while (1)
   {
 	  long time_beat{peak_finder()};
@@ -218,6 +219,17 @@ int main(void)
 
 	  	  }
 	  	  cycle_count++;
+
+
+	  	   if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == 1)
+	  	   {
+	  	      HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
+	  	   }
+	  	   else
+	  	   {
+	  	      HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
+	  	   }
+
   }
     /* USER CODE END WHILE */
 
