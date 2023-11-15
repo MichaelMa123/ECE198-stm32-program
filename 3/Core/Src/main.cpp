@@ -154,6 +154,7 @@ void pushvalue(int n,bool a)
 		HD44780_Clear();
 		HD44780_SetCursor(0,0);
 		HD44780_PrintStr(s);
+		HD44780_PrintStr(" bpm");
 	}
 
 }
