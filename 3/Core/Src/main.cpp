@@ -180,6 +180,8 @@ int main(void)
   bool compaired {false};
   int mean_rate{};
   int std_dev{};
+  int warning{};
+  unsigned int cycle_count{};
   while (1)
   {
 	  int time_beat{peak_finder()};
@@ -200,6 +202,10 @@ int main(void)
 	  	  {
 	  		  mean_rate=mean(heart,cap);
 	  		  std_dev=standerd_dev(heart,cap,mean_rate);
+	  		  if(abs(heart[count]-mean_rate)>std_dev)
+	  		  {
+	  			  warning++;
+	  		  }
 	  	  }
   }
     /* USER CODE END WHILE */
