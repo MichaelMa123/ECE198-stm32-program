@@ -182,6 +182,7 @@ int main(void)
   int std_dev{};
   int warning{};
   unsigned int cycle_count{};
+  unsigned int warning_cycle{};
   while (1)
   {
 	  int time_beat{peak_finder()};
@@ -205,8 +206,14 @@ int main(void)
 	  		  if(abs(heart[count]-mean_rate)>std_dev)
 	  		  {
 	  			  warning++;
+	  			  warning_cycle=cycle_count;
 	  		  }
 	  	  }
+	  	  if(((cycle_count-warning_cycle)%10==0)&&warning!=0)
+	  	  {
+	  		  warning--;
+	  	  }
+	  	  cycle_count++;
   }
     /* USER CODE END WHILE */
 
