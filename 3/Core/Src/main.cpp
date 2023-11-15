@@ -24,6 +24,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include "liquidcrystal_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +62,8 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void enable_delay(void);
 void delay(uint32_t tick);
-void Button_press(int n);
+bool Button_press();
+void pushvalue(int n,bool a);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -136,8 +138,23 @@ do
 }
 while((current - start) < tick);
 }
-void Button_press(int n)
+bool Button_press()
 {
+	 if(HAL_GPIO_ReadPin (GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET)
+		 {
+			 return true;
+		 }
+	 return false;
+}
+void pushvalue(int n,bool a)
+{
+	if(bool a)
+	{
+		std::string s = std::to_string(n);
+		HD44780_Clear();
+		HD44780_SetCursor(0,0);
+		HD44780_PrintStr(s);
+	}
 
 }
 
@@ -175,11 +192,19 @@ int main(void)
     MX_ADC1_Init();
     MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+    HD44780_Init(2);
+    HD44780_Clear();
   std::size_t cap{100};
   int heart[cap]{0};
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_buf,ADC_BUF_LED);
   std::vector<long> Time{0};
   unsigned int count{0};
+  HD44780_Init(2);
+    HD44780_Clear();
+    HD44780_SetCursor(0,0);
+    HD44780_PrintStr("HELLO");
+    HD44780_SetCursor(10,1);
+    HD44780_PrintStr("WORLD");
   /* USER CODE END 2 */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
