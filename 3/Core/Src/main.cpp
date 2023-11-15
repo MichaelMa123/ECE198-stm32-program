@@ -36,7 +36,7 @@
 /* USER CODE BEGIN PD */
 int mean(int array[],std::size_t n);
 int standerd_dev(int array[],std::size_t n,int mean);
-int peak_finder();
+long peak_finder();
 
 /* USER CODE END PD */
 
@@ -90,7 +90,7 @@ int standerd_dev(int array[],std::size_t n,int mean)
 	return final;
 }
 
-int peak_finder()
+long peak_finder()
 {
 	int millis = HAL_GetTick();
 	enable_delay();
@@ -116,7 +116,7 @@ int peak_finder()
 		slops.push_back(slope);
 		if(	slops[slops. size()-2]>=0&&slops[slops.size()-1]<=0)
 		{
-			int millis = HAL_GetTick();
+			long millis = HAL_GetTick();
 			return millis;
 		}
 	}
@@ -172,28 +172,58 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_buf,ADC_BUF_LED);
-  std::vector<int> Time{0};
+  std::vector<long> Time{0};
   unsigned int count{0};
   /* USER CODE END 2 */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  bool compaired {false};
+  int mean_rate{};
+  int std_dev{};
+  int warning{};
+  unsigned int cycle_count{};
+  unsigned int warning_cycle{};
   while (1)
   {
+	  long time_beat{peak_finder()};
+	  	  Time.push_back(time_beat);
+	  	  if(Time[Time. size()-2]!=0)
+	  	  {
+	  		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
+
+	  		  count++;
+	  		  if(count==100)
+	  		  {
+	  			  count=0;
+	  			  compaired=true;
+
+	  		  }
+	  	  }
+	  	  if(compaired&&(count%10==0))
+	  	  {
+	  		  mean_rate=mean(heart,cap);
+	  		  std_dev=standerd_dev(heart,cap,mean_rate);
+	  	  }
+	  	if(abs(heart[count]-mean_rate)>std_dev)
+	  		{
+	  			warning++;
+	  			warning_cycle=cycle_count;
+	  		}
+	  	  if(((cycle_count-warning_cycle)%10==0)&&warning!=0)
+	  	  {
+	  		  warning--;
+	  	  }
+	  	  if(warning>10)
+	  	  {
+
+	  	  }
+	  	  cycle_count++;
+  }
     /* USER CODE END WHILE */
-	  int time_beat{peak_finder()};
-	  Time.push_back(time_beat);
-	  if(Time[Time. size()-2]!=0)
-	  {
-		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
-		  count++;
-		  if(count==100)
-		  {
-			  count=0;
-		  }
-	  }
+
 
     /* USER CODE BEGIN 3 */
-  }
+
   /* USER CODE END 3 */
 }
 
