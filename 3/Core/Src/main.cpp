@@ -187,6 +187,7 @@ int main(void)
 	  	  if(Time[Time. size()-2]!=0)
 	  	  {
 	  		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
+
 	  		  count++;
 	  		  if(count==100)
 	  		  {
