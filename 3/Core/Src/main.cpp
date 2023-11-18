@@ -258,6 +258,7 @@ int main(void)
 	  	if(((cycle_count)%20==0))
 	  		  	  {
 	  		  		  pressed=false;
+	  		  		  HD44780_Clear();
 
 	  		  	  }
 	  	  cycle_count++;
