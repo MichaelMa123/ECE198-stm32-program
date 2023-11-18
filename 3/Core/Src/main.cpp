@@ -24,11 +24,11 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include "liquidcrystal_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+
 #define ADC_BUF_LED 4096
 /* USER CODE END PTD */
 
@@ -45,9 +45,11 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
+
 I2C_HandleTypeDef hi2c1;
 
 UART_HandleTypeDef huart1;
+i2cLcd_HandleTypeDef h_lcd;
 
 /* USER CODE BEGIN PV */
 uint16_t adc_buf[ADC_BUF_LED];
@@ -59,11 +61,12 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-void enable_delay(void);
 void delay(uint32_t tick);
 bool Button_press();
 void pushvalue(int n,bool a);
+void enable_delay(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -71,7 +74,7 @@ void pushvalue(int n,bool a);
 int mean(int array[],std::size_t n)// calculate the mean of the value.
 {
 	int sum{0};
-	for(std::size_t m;m<n;m++)
+	for(std::size_t m{};m<n;m++)
 	{
 		sum+=array[m];
 	}
@@ -148,17 +151,21 @@ bool Button_press()
 }
 void pushvalue(int n,bool a)
 {
-	if(bool a)
+	if(a)
 	{
+		i2cLcd_ClearDisplay(&h_lcd);
 		std::string s = std::to_string(n);
-		HD44780_Clear();
-		HD44780_SetCursor(0,0);
-		HD44780_PrintStr(s);
-		HD44780_PrintStr(" bpm");
+		const char* str = s.c_str();
+		std::size_t i =0;
+		while(str[i])
+		{
+			  i2cLcd_SendChar(&h_lcd, str[i]);
+			  //HAL_Delay(100);
+			  i++;
+		}
 	}
 
 }
-
 /* USER CODE END 0 */
 
 /**
@@ -188,25 +195,20 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  	MX_GPIO_Init();
-    MX_DMA_Init();
-    MX_ADC1_Init();
-    MX_USART1_UART_Init();
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_ADC1_Init();
+  uint8_t i2c_lcd_addr = (0x27<<1);
+  MX_USART1_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-    HD44780_Init(2);
-    HD44780_Clear();
   std::size_t cap{100};
   int heart[cap]{0};
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_buf,ADC_BUF_LED);
   std::vector<long> Time{0};
   unsigned int count{0};
-  HD44780_Init(2);
-    HD44780_Clear();
-    HD44780_SetCursor(0,0);
-    HD44780_PrintStr("HELLO");
-    HD44780_SetCursor(10,1);
-    HD44780_PrintStr("WORLD");
   /* USER CODE END 2 */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   bool compaired {false};
@@ -218,95 +220,64 @@ int main(void)
   int beat_per_mins{0};
   bool pressed{false};
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET);
+  i2cLcd_CreateHandle(&h_lcd, &hi2c1, i2c_lcd_addr);
+  i2cLcd_Init(&h_lcd);
   while (1)
   {
 	  long time_beat{peak_finder()};
-	  pressed{Button_press()};
-	  	  Time.push_back(time_beat);
-	  	  if(Time[Time. size()-2]!=0)
-	  	  {
-	  		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
+	  	  	  pressed=Button_press();
+	  	  	  	  Time.push_back(time_beat);
+	  	  	  	  if(Time[Time. size()-2]!=0)
+	  	  	  	  {
+	  	  	  		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
 
-	  		  count++;
-	  		  if(count==100)
-	  		  {
-	  			  count=0;
-	  			  compaired=true;
+	  	  	  		  count++;
+	  	  	  		  if(count==100)
+	  	  	  		  {
+	  	  	  			  count=0;
+	  	  	  			  compaired=true;
 
-	  		  }
-	  		  int time_per_beat{heart[count]/1000};
-	  		  beat_per_mins=60/time_per_beat;
-	  	  }
-	  	pushvalue(beat_per_mins,pressed);
-	  	  if(compaired&&(count%10==0))
-	  	  {
-	  		  mean_rate=mean(heart,cap);
-	  		  std_dev=standerd_dev(heart,cap,mean_rate);
-	  	  }
-	  	pushvalue(beat_per_mins,pressed);
-	  	if(abs(heart[count]-mean_rate)>std_dev)
-	  		{
-	  			warning++;
-	  			warning_cycle=cycle_count;
-	  		}
-	  	pushvalue(beat_per_mins,pressed);
-	  	  if(((cycle_count-warning_cycle)%10==0)&&warning!=0)
-	  	  {
-	  		  warning--;
+	  	  	  		  }
+	  	  	  		  int time_per_beat{heart[count]/1000};
+	  	  	  		  beat_per_mins=60/time_per_beat;
+	  	  	  	  }
+	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	  if(compaired&&(count%10==0))
+	  	  	  	  {
+	  	  	  		  mean_rate=mean(heart,cap);
+	  	  	  		  std_dev=standerd_dev(heart,cap,mean_rate);
+	  	  	  	  }
+	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	if(abs(heart[count]-mean_rate)>std_dev)
+	  	  	  		{
+	  	  	  			warning++;
+	  	  	  			warning_cycle=cycle_count;
+	  	  	  		}
+	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	  if(((cycle_count-warning_cycle)%10==0)&&warning!=0)
+	  	  	  	  {
+	  	  	  		  warning--;
 
-	  	  }
-	  	if(((cycle_count)%20==0))
-	  		  	  {
-	  		  		  pressed=false;
-	  		  		  HD44780_Clear();
+	  	  	  	  }
+	  	  	  	if(((cycle_count)%20==0))
+	  	  	  		  	  {
+	  	  	  		  		  pressed=false;
 
-	  		  	  }
-	  	  cycle_count++;
-	  	pushvalue(beat_per_mins,pressed);
-	  	  if(Time.size()>20)
-	  	  {
-	  	     Time.erase(Time.begin(), Time.end() - 1);
-	  	  }
-	  	Button_press();
+	  	  	  		  		  i2cLcd_ClearDisplay(&h_lcd);
 
-
-
-
-  }
+	  	  	  		  	  }
+	  	  	  	  cycle_count++;
+	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	  if(Time.size()>20)
+	  	  	  	  {
+	  	  	  	     Time.erase(Time.begin(), Time.end() - 1);
+	  	  	  	  }
+	  	  	  	Button_press();
     /* USER CODE END WHILE */
 
-
     /* USER CODE BEGIN 3 */
-
-  /* USER CODE END 3 */
-}
-static void MX_I2C1_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
-  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
   }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
-
+  /* USER CODE END 3 */
 }
 
 /**
@@ -404,6 +375,40 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
 
 }
 
