@@ -216,10 +216,12 @@ int main(void)
   unsigned int cycle_count{};
   unsigned int warning_cycle{};
   int beat_per_mins{0};
+  bool pressed{false};
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET);
   while (1)
   {
 	  long time_beat{peak_finder()};
+	  pressed{Button_press()};
 	  	  Time.push_back(time_beat);
 	  	  if(Time[Time. size()-2]!=0)
 	  	  {
@@ -235,25 +237,36 @@ int main(void)
 	  		  int time_per_beat{heart[count]/1000};
 	  		  beat_per_mins=60/time_per_beat;
 	  	  }
+	  	pushvalue(beat_per_mins,pressed);
 	  	  if(compaired&&(count%10==0))
 	  	  {
 	  		  mean_rate=mean(heart,cap);
 	  		  std_dev=standerd_dev(heart,cap,mean_rate);
 	  	  }
+	  	pushvalue(beat_per_mins,pressed);
 	  	if(abs(heart[count]-mean_rate)>std_dev)
 	  		{
 	  			warning++;
 	  			warning_cycle=cycle_count;
 	  		}
+	  	pushvalue(beat_per_mins,pressed);
 	  	  if(((cycle_count-warning_cycle)%10==0)&&warning!=0)
 	  	  {
 	  		  warning--;
+
 	  	  }
+	  	if(((cycle_count)%20==0))
+	  		  	  {
+	  		  		  pressed=false;
+
+	  		  	  }
 	  	  cycle_count++;
+	  	pushvalue(beat_per_mins,pressed);
 	  	  if(Time.size()>20)
 	  	  {
 	  	     Time.erase(Time.begin(), Time.end() - 1);
 	  	  }
+	  	Button_press();
 
 
 
