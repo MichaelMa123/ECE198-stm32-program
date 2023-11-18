@@ -151,18 +151,20 @@ bool Button_press()
 }
 void pushvalue(int n,bool a)
 {
-	if(a)
+	if(a==true)
 	{
+
+		//i2cLcd_Init(&h_lcd);
 		i2cLcd_ClearDisplay(&h_lcd);
 		std::string s = std::to_string(n);
-		const char* str = s.c_str();
 		std::size_t i =0;
-		while(str[i])
+		while(s[i])
 		{
-			  i2cLcd_SendChar(&h_lcd, str[i]);
+			  i2cLcd_SendChar(&h_lcd, s[i]);
 			  //HAL_Delay(100);
 			  i++;
 		}
+		//delete [] str;
 	}
 
 }
@@ -175,7 +177,7 @@ void pushvalue(int n,bool a)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	uint8_t i2c_lcd_addr = (0x27<<1);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -198,7 +200,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-  uint8_t i2c_lcd_addr = (0x27<<1);
+  //uint8_t i2c_lcd_addr = (0x27<<1);
   MX_USART1_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
@@ -225,7 +227,11 @@ int main(void)
   while (1)
   {
 	  long time_beat{peak_finder()};
-	  	  	  pressed=Button_press();
+	  HAL_Delay(400);
+	  if(pressed==false)
+	  {
+	  	pressed=Button_press();
+	  }
 	  	  	  	  Time.push_back(time_beat);
 	  	  	  	  if(Time[Time. size()-2]!=0)
 	  	  	  	  {
@@ -239,6 +245,7 @@ int main(void)
 
 	  	  	  		  }
 	  	  	  		  int time_per_beat{heart[count]/1000};
+	  	  	  		  time_per_beat=10;
 	  	  	  		  beat_per_mins=60/time_per_beat;
 	  	  	  	  }
 	  	  	  	pushvalue(beat_per_mins,pressed);
@@ -267,12 +274,15 @@ int main(void)
 
 	  	  	  		  	  }
 	  	  	  	  cycle_count++;
-	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	//pushvalue(beat_per_mins,pressed);
 	  	  	  	  if(Time.size()>20)
 	  	  	  	  {
 	  	  	  	     Time.erase(Time.begin(), Time.end() - 1);
 	  	  	  	  }
-	  	  	  	Button_press();
+	  	  	  if(pressed==false)
+	  	  	  	  {
+	  	  	  	  	  	  pressed=Button_press();
+	  	  	  	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
