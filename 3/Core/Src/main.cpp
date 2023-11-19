@@ -67,6 +67,7 @@ void delay(uint32_t tick);
 bool Button_press();
 void pushvalue(int n,bool a);
 void enable_delay(void);
+void pushWarning(int n);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -168,6 +169,43 @@ void pushvalue(int n,bool a)
 	}
 
 }
+void pushWarning(int n)
+{
+	//i2cLcd_Init(&h_lcd);
+		i2cLcd_ClearDisplay(&h_lcd);
+		std::string s = "Warning, abnormal heart rate ";
+		std::string u {};
+		if(n>160)
+		{
+			u="Heart rate higer than 160";
+		}
+		else if(n<40&&n>10)
+		{
+			u="Warning Heart rate Low ";
+		}
+		else if(n<=10)
+		{
+			u="warning heart rate lower that 10";
+		}
+
+		std::size_t i =0;
+		while(s[i])
+		{
+			  i2cLcd_SendChar(&h_lcd, s[i]);
+			  //HAL_Delay(100);
+			  i++;
+		}
+		i=0;
+		if(n<40||n>160)
+		{
+			while(u[i])
+			{
+				i2cLcd_SendChar(&h_lcd, u[i]);
+			}
+		}
+
+
+}
 /* USER CODE END 0 */
 
 /**
@@ -227,6 +265,7 @@ int main(void)
   while (1)
   {
 	  long time_beat{peak_finder()};
+	  pushvalue(beat_per_mins,pressed);
 	  HAL_Delay(400);
 	  if(pressed==false)
 	  {
@@ -245,8 +284,10 @@ int main(void)
 
 	  	  	  		  }
 	  	  	  		  int time_per_beat{heart[count]/1000};
-	  	  	  		  time_per_beat=10;
+	  	  	  		  if(time_per_beat!=0)
+	  	  	  		  {
 	  	  	  		  beat_per_mins=60/time_per_beat;
+	  	  	  		  }
 	  	  	  	  }
 	  	  	  	pushvalue(beat_per_mins,pressed);
 	  	  	  	  if(compaired&&(count%10==0))
@@ -261,6 +302,11 @@ int main(void)
 	  	  	  			warning_cycle=cycle_count;
 	  	  	  		}
 	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	if(warning>10)
+	  	  	  	{
+	  	  	  		pushWarning(beat_per_mins);
+	  	  	  		pressed=true;
+	  	  	  	}
 	  	  	  	  if(((cycle_count-warning_cycle)%10==0)&&warning!=0)
 	  	  	  	  {
 	  	  	  		  warning--;
