@@ -24,6 +24,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <climits>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -266,7 +267,7 @@ int main(void)
   {
 	  long time_beat{peak_finder()};
 	  pushvalue(beat_per_mins,pressed);
-	  HAL_Delay(400);
+	  //HAL_Delay(400);
 	  if(pressed==false)
 	  {
 	  	pressed=Button_press();
@@ -289,6 +290,7 @@ int main(void)
 	  	  	  		  beat_per_mins=60/time_per_beat;
 	  	  	  		  }
 	  	  	  	  }
+
 	  	  	  	pushvalue(beat_per_mins,pressed);
 	  	  	  	  if(compaired&&(count%10==0))
 	  	  	  	  {
@@ -329,6 +331,10 @@ int main(void)
 	  	  	  	  {
 	  	  	  	  	  	  pressed=Button_press();
 	  	  	  	  }
+	  	  	if(count==(UINT_MAX-15))
+	  	  	{
+	  	  		count=0;
+	  	  	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
