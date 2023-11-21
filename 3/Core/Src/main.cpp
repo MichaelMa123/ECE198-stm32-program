@@ -100,30 +100,57 @@ long peak_finder()
 {
 	int millis = HAL_GetTick();
 	enable_delay();
-	int raw{};
-	int raw2{};
+	//int raw{};
+	//int raw2{};
 	return millis;
-	uint32_t times{86000};
-	int t2{1000};
+	uint32_t times{860};
+	//int t2{1000};
 	bool peak{true};
 	delay(times);
-	std::vector<uint32_t> slops{};
+	std::vector<long long> slops{};
+	unsigned long reader{};
+	unsigned long recorder[5]{0};
 	while(peak)
 	{
+		unsigned long now=HAL_GetTick();
+		unsigned int n =0;
+		unsigned long start=HAL_GetTick();
+	for(int p{0};p<5;p++)
+	{
+	while(now<(start+30))
+	{
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+		HAL_ADC_Start(&hadc1);
 		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		raw = HAL_ADC_GetValue(&hadc1);
+		reader += HAL_ADC_GetValue(&hadc1);
+		n++;
+		now=HAL_GetTick();
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		delay(times);
-		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		raw2=HAL_ADC_GetValue(&hadc1);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		long int slope{(raw2-raw)/t2};
+	}
+	reader/=n;
+	recorder[p]=reader;
+	}
+
+
+
+		//HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+		//raw = HAL_ADC_GetValue(&hadc1);
+		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+		//delay(times);
+		//HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+		//raw2=HAL_ADC_GetValue(&hadc1);
+		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+		long long slope{(recorder[4]-recorder[0])};
 
 		slops.push_back(slope);
-		if(	slops[slops. size()-2]>=0&&slops[slops.size()-1]<=0)
+		if(	slops[slops. size()-2]>0&&slops[slops.size()-1]<0)
 		{
 			long millis = HAL_GetTick();
 			return millis;
+		}
+		if(slops.size()>10)
+		{
+			slops.erase(slops.begin(), slops.end() - 2);
 		}
 	}
 }
@@ -155,15 +182,20 @@ void pushvalue(int n,bool a)
 {
 	if(a==true)
 	{
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+		int reader = HAL_ADC_GetValue(&hadc1);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 
-		//i2cLcd_Init(&h_lcd);
+		i2cLcd_Init(&h_lcd);
 		i2cLcd_ClearDisplay(&h_lcd);
-		std::string s = std::to_string(n);
+		std::string s = std::to_string(reader);
 		std::size_t i =0;
 		while(s[i])
 		{
 			  i2cLcd_SendChar(&h_lcd, s[i]);
-			  //HAL_Delay(100);
+	  //HAL_Delay(100);
 			  i++;
 		}
 		//delete [] str;
@@ -263,17 +295,19 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET);
   i2cLcd_CreateHandle(&h_lcd, &hi2c1, i2c_lcd_addr);
   i2cLcd_Init(&h_lcd);
+  //long time2_beat{peak_finder()};
   while (1)
   {
 	  long time_beat{peak_finder()};
 	  pushvalue(beat_per_mins,pressed);
-	  //HAL_Delay(400);
+	  //pushvalue(time_beat/1000,pressed);
+	  HAL_Delay(400);
 	  if(pressed==false)
 	  {
 	  	pressed=Button_press();
 	  }
-	  	  	  	  Time.push_back(time_beat);
-	  	  	  	  if(Time[Time. size()-2]!=0)
+	  Time.push_back(time_beat);
+	  if(Time[Time. size()-2]!=0)
 	  	  	  	  {
 	  	  	  		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
 
@@ -287,23 +321,26 @@ int main(void)
 	  	  	  		  int time_per_beat{heart[count]/1000};
 	  	  	  		  if(time_per_beat!=0)
 	  	  	  		  {
-	  	  	  		  beat_per_mins=60/time_per_beat;
+	  	  	  		  beat_per_mins=time_per_beat;
 	  	  	  		  }
 	  	  	  	  }
 
 	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  //pushvalue(time_beat/1000,pressed);
 	  	  	  	  if(compaired&&(count%10==0))
 	  	  	  	  {
 	  	  	  		  mean_rate=mean(heart,cap);
 	  	  	  		  std_dev=standerd_dev(heart,cap,mean_rate);
 	  	  	  	  }
 	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  //pushvalue(time_beat/1000,pressed);
 	  	  	  	if(abs(heart[count]-mean_rate)>std_dev)
 	  	  	  		{
 	  	  	  			warning++;
 	  	  	  			warning_cycle=cycle_count;
 	  	  	  		}
 	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	//pushvalue(time_beat/1000,pressed);
 	  	  	  	if(warning>10)
 	  	  	  	{
 	  	  	  		pushWarning(beat_per_mins);
@@ -322,7 +359,8 @@ int main(void)
 
 	  	  	  		  	  }
 	  	  	  	  cycle_count++;
-	  	  	  	//pushvalue(beat_per_mins,pressed);
+	  	  	  //pushvalue(time_beat/1000,pressed);
+	  	  	  	pushvalue(beat_per_mins,pressed);
 	  	  	  	  if(Time.size()>20)
 	  	  	  	  {
 	  	  	  	     Time.erase(Time.begin(), Time.end() - 1);
