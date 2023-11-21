@@ -66,6 +66,7 @@ static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 void delay(uint32_t tick);
 bool Button_press();
+long peak_finder();
 void pushvalue(int n,bool a);
 void enable_delay(void);
 void pushWarning(int n);
@@ -98,27 +99,27 @@ int standerd_dev(int array[],std::size_t n,int mean)
 
 long peak_finder()
 {
-	int millis = HAL_GetTick();
-	enable_delay();
+	long millis {};
+	//enable_delay();
 	//int raw{};
 	//int raw2{};
-	return millis;
-	uint32_t times{860};
+	//return millis;
+	//uint32_t times{860};
 	//int t2{1000};
-	bool peak{true};
-	delay(times);
+	//bool peak{true};
+	//delay(times);
 	std::vector<long long> slops{};
 	unsigned long reader{};
 	unsigned long recorder[5]{0};
-	while(peak)
+	while(true)
 	{
 		unsigned long now=HAL_GetTick();
 		unsigned int n =0;
 		unsigned long start=HAL_GetTick();
-	for(int p{0};p<5;p++)
-	{
-	while(now<(start+30))
-	{
+		for(int p{0};p<5;p++)
+		{
+			while(now<(start+20))
+		{
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 		HAL_ADC_Start(&hadc1);
 		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
@@ -126,13 +127,11 @@ long peak_finder()
 		n++;
 		now=HAL_GetTick();
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-	}
-	reader/=n;
-	recorder[p]=reader;
-	}
-
-
-
+		}
+			reader/=n;
+			recorder[p]=reader;
+			//return millies;
+		}
 		//HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 		//raw = HAL_ADC_GetValue(&hadc1);
 		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
@@ -145,7 +144,7 @@ long peak_finder()
 		slops.push_back(slope);
 		if(	slops[slops. size()-2]>0&&slops[slops.size()-1]<0)
 		{
-			long millis = HAL_GetTick();
+			millis = HAL_GetTick();
 			return millis;
 		}
 		if(slops.size()>10)
@@ -153,6 +152,7 @@ long peak_finder()
 			slops.erase(slops.begin(), slops.end() - 2);
 		}
 	}
+	return 0;
 }
 void enable_delay(void)
 {
@@ -190,7 +190,7 @@ void pushvalue(int n,bool a)
 
 		i2cLcd_Init(&h_lcd);
 		i2cLcd_ClearDisplay(&h_lcd);
-		std::string s = std::to_string(reader);
+		std::string s = std::to_string(n);
 		std::size_t i =0;
 		while(s[i])
 		{
@@ -295,51 +295,63 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET);
   i2cLcd_CreateHandle(&h_lcd, &hi2c1, i2c_lcd_addr);
   i2cLcd_Init(&h_lcd);
+  int dif{};
+  long now{};
+  long start{};
   //long time2_beat{peak_finder()};
   while (1)
   {
+	  now=HAL_GetTick();
+	  		//unsigned int n =0;
+	  		//unsigned long start=HAL_GetTick();
 	  long time_beat{peak_finder()};
-	  pushvalue(beat_per_mins,pressed);
+	  start=HAL_GetTick();
+
+	  //pushvalue(beat_per_mins,pressed);
 	  //pushvalue(time_beat/1000,pressed);
-	  HAL_Delay(400);
+	  //HAL_Delay(400);
 	  if(pressed==false)
 	  {
 	  	pressed=Button_press();
 	  }
-	  Time.push_back(time_beat);
-	  if(Time[Time. size()-2]!=0)
-	  	  	  	  {
-	  	  	  		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
+	  Time.push_back(start-now);
+	  //if(Time[Time. size()-2]!=0)
+	  	  	  	  //{
+	  	  	  		  dif=start-now;
+	  	  	  	pushvalue(dif,pressed);
 
-	  	  	  		  count++;
+	  	  	  		  //count++;
 	  	  	  		  if(count==100)
 	  	  	  		  {
 	  	  	  			  count=0;
 	  	  	  			  compaired=true;
 
 	  	  	  		  }
-	  	  	  		  int time_per_beat{heart[count]/1000};
+	  	  	  		  double time_per_beat{dif/1000};
 	  	  	  		  if(time_per_beat!=0)
 	  	  	  		  {
 	  	  	  		  beat_per_mins=time_per_beat;
+	  	  	  		  heart[count]=beat_per_mins;
 	  	  	  		  }
-	  	  	  	  }
+	  	  	  	count++;
+	  	  	  	  //}
 
-	  	  	  	pushvalue(beat_per_mins,pressed);
-	  	  	  //pushvalue(time_beat/1000,pressed);
+	  	  	  	//pushvalue(beat_per_mins,pressed);
+	  	  	  //pushvalue(dif,pressed);
+	  	  	pushvalue(dif,pressed);
 	  	  	  	  if(compaired&&(count%10==0))
 	  	  	  	  {
 	  	  	  		  mean_rate=mean(heart,cap);
 	  	  	  		  std_dev=standerd_dev(heart,cap,mean_rate);
 	  	  	  	  }
-	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	//pushvalue(beat_per_mins,pressed);
 	  	  	  //pushvalue(time_beat/1000,pressed);
 	  	  	  	if(abs(heart[count]-mean_rate)>std_dev)
 	  	  	  		{
 	  	  	  			warning++;
 	  	  	  			warning_cycle=cycle_count;
 	  	  	  		}
-	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	//pushvalue(beat_per_mins,pressed);
 	  	  	//pushvalue(time_beat/1000,pressed);
 	  	  	  	if(warning>10)
 	  	  	  	{
@@ -360,7 +372,7 @@ int main(void)
 	  	  	  		  	  }
 	  	  	  	  cycle_count++;
 	  	  	  //pushvalue(time_beat/1000,pressed);
-	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	//pushvalue(beat_per_mins,pressed);
 	  	  	  	  if(Time.size()>20)
 	  	  	  	  {
 	  	  	  	     Time.erase(Time.begin(), Time.end() - 1);
