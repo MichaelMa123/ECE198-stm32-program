@@ -24,6 +24,8 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <climits>
+#include <algorithm>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,9 +67,12 @@ static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 void delay(uint32_t tick);
 bool Button_press();
-void pushvalue(int n,bool a);
+bool peak_finder();
+void pushvalue(long long n,bool a);
+long beat_per_mins();
+//void pushvalue(long n,bool a);
 void enable_delay(void);
-void pushWarning(int n);
+void pushWarning(long n);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -95,37 +100,80 @@ int standerd_dev(int array[],std::size_t n,int mean)
 	return final;
 }
 
-long peak_finder()
-{
-	int millis = HAL_GetTick();
-	enable_delay();
-	int raw{};
-	int raw2{};
-	return millis;
-	uint32_t times{86000};
-	int t2{1000};
-	bool peak{true};
-	delay(times);
-	std::vector<uint32_t> slops{};
-	while(peak)
-	{
-		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		raw = HAL_ADC_GetValue(&hadc1);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		delay(times);
-		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		raw2=HAL_ADC_GetValue(&hadc1);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		long int slope{(raw2-raw)/t2};
-
-		slops.push_back(slope);
-		if(	slops[slops. size()-2]>=0&&slops[slops.size()-1]<=0)
-		{
-			long millis = HAL_GetTick();
-			return millis;
-		}
-	}
-}
+//bool peak_finder()
+//{
+//	long long max_value=0;
+//	bool ispeak=false;
+//	bool result=false;
+//	long long raw_value{};
+//	int a{};
+//	long long reader=0;
+//	long start=HAL_GetTick();
+//	long now=HAL_GetTick();
+////	for(int n{0};now<(start+20);n++)
+////		//reader=0
+////		//for(long long n{0};n<200;n++)
+////	{
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+//		HAL_ADC_Start(&hadc1);
+//		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//				//pushvalue(HAL_ADC_GetValue(&hadc1),true);
+//		raw_value = HAL_ADC_GetValue(&hadc1);					//pushvalue(n,true);
+////				//++n;					a=n;
+////		//pushvalue(a,true);
+////		now=HAL_GetTick();
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+////		a++;
+////	}
+//	raw_value=reader/a;
+//	if(raw_value*2<max_value)
+//	{
+//		max_value=raw_value*0.8;
+//	}
+//	if(raw_value>max_value-5)
+//	{
+//		if(raw_value>max_value)
+//		{
+//			max_value=raw_value;
+//		}
+//		if(ispeak==false)
+//		{
+//			result=true;
+//		}
+//		else if (raw_value<max_value-10)
+//		{
+//			ispeak=false;
+//			max_value=max_value-10;
+//		}
+//		return result;
+//	}
+//	return 0;
+//}
+//long beat_per_mins()
+//{
+//	bool n=true;
+//	int beat_per_mls{};
+//	while(n)
+//	{
+//		//int beat_per_m{};
+//		int rate{};
+//		if(peak_finder())
+//		{
+//			rate=60000/beat_per_mls;
+//			pushvalue(rate,true);
+//			return rate;
+//		}
+//		else
+//		{
+//			enable_delay();
+//			delay(840000);
+//		}
+//		beat_per_mls+=10;
+//
+//	}
+//	//return rate;
+//	return 0;
+//}
 void enable_delay(void)
 {
 	DWT->CYCCNT = 0;
@@ -150,26 +198,57 @@ bool Button_press()
 		 }
 	 return false;
 }
-void pushvalue(int n,bool a)
+//void pushvalue(int n,bool a)
+//{
+//	if(a==true)
+//	{
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+//		HAL_ADC_Start(&hadc1);
+//		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//		int reader = HAL_ADC_GetValue(&hadc1);
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//
+//		i2cLcd_Init(&h_lcd);
+//		i2cLcd_ClearDisplay(&h_lcd);
+//		std::string s = std::to_string(reader);
+//		std::size_t i =0;
+//		while(s[i])
+//		{
+//			  i2cLcd_SendChar(&h_lcd, s[i]);
+//	  //HAL_Delay(100);
+//			  i++;
+//		}
+//		//delete [] str;
+//	}
+//
+//}
+void pushvalue(long long n,bool a)
 {
 	if(a==true)
 	{
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+//		HAL_ADC_Start(&hadc1);
+//		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//		int reader = HAL_ADC_GetValue(&hadc1);
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 
-		//i2cLcd_Init(&h_lcd);
+		i2cLcd_Init(&h_lcd);
 		i2cLcd_ClearDisplay(&h_lcd);
 		std::string s = std::to_string(n);
+		//std::string s = std::to_string(reader);
 		std::size_t i =0;
 		while(s[i])
 		{
 			  i2cLcd_SendChar(&h_lcd, s[i]);
-			  //HAL_Delay(100);
+	  //HAL_Delay(100);
 			  i++;
 		}
 		//delete [] str;
 	}
 
 }
-void pushWarning(int n)
+
+void pushWarning(long n)
 {
 	//i2cLcd_Init(&h_lcd);
 		i2cLcd_ClearDisplay(&h_lcd);
@@ -206,6 +285,66 @@ void pushWarning(int n)
 
 
 }
+//int beat20()
+//{
+//	const float Threshold = 0.7;
+//	const int min_diff = 10;
+//	int const buffer{250};
+//	int nsap=0;
+//	int index=0;
+//	int sample_buffer[buffer];
+//	long last=0;
+//	int max_value=0;
+//	int min_value=1024;
+//	while(true)
+//		{
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+//	HAL_ADC_Start(&hadc1);
+//	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//	sample_buffer[index] = HAL_ADC_GetValue(&hadc1);
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//	if(nsap>=buffer&&HAL_GetTick()-last>500)
+//	{
+//		last=HAL_GetTick();
+//
+//	int max_value=0;
+//	int min_value=1024;
+//	for(int i = 0; i <buffer; i++) {
+//	      max_value = std::max(sample_buffer[i], max_value);
+//	      min_value = std::min(sample_buffer[i], min_value);
+//	    }
+//	float difference=std::max(max_value-min_value,min_diff);
+//	float threshold = difference * Threshold + min_value;
+//	int heart_beata{0};
+//	int heart_beatb{0};
+//	int heart_beatc{0};
+//	for(int i = 1; i < buffer; i++)
+//	{
+//		if(sample_buffer[(index+i+1)]%buffer >= threshold && sample_buffer[(index+i)%buffer] < threshold)
+//		{
+//			if(heart_beatc && i-heart_beatc > 15 && i-heart_beatc < 150)
+//			{
+//			heart_beatb += i-heart_beatc;
+//			heart_beata++;
+//			}
+//			heart_beatc = i;
+//		}
+//		float bpm = 60000 * heart_beata/ (heart_beatb * 20);
+//		if(heart_beata>3)
+//		{
+//
+//		}
+//	}
+//	}
+//	else
+//	{
+//		nsap++;
+//	}
+//	index=(index+1)%buffer;
+//	enable_delay();
+//	delay(1680000);
+//}
+//}
 /* USER CODE END 0 */
 
 /**
@@ -215,7 +354,7 @@ void pushWarning(int n)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t i2c_lcd_addr = (0x27<<1);
+	//uint8_t i2c_lcd_addr = (0x27<<1);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -238,7 +377,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-  //uint8_t i2c_lcd_addr = (0x27<<1);
+  uint8_t i2c_lcd_addr = (0x27<<1);
   MX_USART1_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
@@ -247,6 +386,16 @@ int main(void)
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_buf,ADC_BUF_LED);
   std::vector<long> Time{0};
   unsigned int count{0};
+  const float Threshold = 0.7;
+  	const int min_diff = 10;
+  	int const buffer{250};
+  	int nsap=0;
+  	int index=0;
+  	int sample_buffer[buffer];
+  	long last=0;
+  	int max_value=0;
+  	int min_value=1024;
+  //unsigned int cycle;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -257,62 +406,105 @@ int main(void)
   int warning{0};
   unsigned int cycle_count{};
   unsigned int warning_cycle{};
-  int beat_per_mins{0};
+  //int beat_per_mins2{0};
   bool pressed{false};
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET);
   i2cLcd_CreateHandle(&h_lcd, &hi2c1, i2c_lcd_addr);
   i2cLcd_Init(&h_lcd);
+//  int dif{};
+//  long now{};
+//  long start{};
+  //long time2_beat{peak_finder()};
   while (1)
   {
-	  long time_beat{peak_finder()};
-	  pushvalue(beat_per_mins,pressed);
-	  HAL_Delay(400);
+	  	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+	  	HAL_ADC_Start(&hadc1);
+	  	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+	  	sample_buffer[index] = HAL_ADC_GetValue(&hadc1);
+	  	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+	  	if(nsap>=buffer&&(HAL_GetTick()-last)>500)
+	  	{
+	  		last=HAL_GetTick();
+
+	  	int max_value=0;
+	  	int min_value=1024;
+	  	for(int i = 0; i <buffer; i++)
+	  	{
+	  	      max_value = std::max(sample_buffer[i], max_value);
+	  	      min_value = std::min(sample_buffer[i], min_value);
+	  	}
+	  	float difference=std::max(max_value-min_value,min_diff);
+	  	float threshold = difference * Threshold + min_value;
+	  	int heart_beata{0};
+	  	int heart_beatb{0};
+	  	int heart_beatc{0};
+	  	for(int i = 1; i < buffer; i++)
+	  	{
+	  		if(sample_buffer[(index+i+1)%buffer] >= threshold && sample_buffer[(index+i)%buffer] < threshold)
+	  		{
+	  			if(heart_beatc && i-heart_beatc > 15 && i-heart_beatc < 150)
+	  			{
+	  			heart_beatb += i-heart_beatc;
+	  			heart_beata++;
+	  			}
+	  			heart_beatc = i;
+	  		}
+	  		int bpm = 60000 * heart_beata / (heart_beatb * 20);
+	  		if(heart_beata>3)
+	  		{
+	  			heart[count]=bpm;
+	  			count++;
+				if(count==100)
+				{
+					count=0;
+					compaired=true;
+				}
+	  			pushvalue(heart[count],pressed);
+
+	  		}
+	  	}
+	  	}
+	  	else
+	  	{
+	  		nsap++;
+	  	}
+	  	index=(index+1)%buffer;
 	  if(pressed==false)
 	  {
 	  	pressed=Button_press();
 	  }
-	  	  	  	  Time.push_back(time_beat);
-	  	  	  	  if(Time[Time. size()-2]!=0)
-	  	  	  	  {
-	  	  	  		  heart[count]=Time[Time. size()-2]-Time[Time. size()-1];
+	  //heart[count]=beat_per_mins();
+	  pushvalue(heart[count],pressed);
+//	  if(count==100)
+//	  {
+//		  count=0;
+//		  compaired=true;
+//
+//	  }
 
-	  	  	  		  count++;
-	  	  	  		  if(count==100)
-	  	  	  		  {
-	  	  	  			  count=0;
-	  	  	  			  compaired=true;
-
-	  	  	  		  }
-	  	  	  		  int time_per_beat{heart[count]/1000};
-	  	  	  		  if(time_per_beat!=0)
-	  	  	  		  {
-	  	  	  		  beat_per_mins=60/time_per_beat;
-	  	  	  		  }
-	  	  	  	  }
-	  	  	  	pushvalue(beat_per_mins,pressed);
+	  	  	  	//cycle++;
+	  	  pushvalue(heart[count],pressed);
 	  	  	  	  if(compaired&&(count%10==0))
 	  	  	  	  {
 	  	  	  		  mean_rate=mean(heart,cap);
 	  	  	  		  std_dev=standerd_dev(heart,cap,mean_rate);
 	  	  	  	  }
-	  	  	  	pushvalue(beat_per_mins,pressed);
 	  	  	  	if(abs(heart[count]-mean_rate)>std_dev)
 	  	  	  		{
 	  	  	  			warning++;
 	  	  	  			warning_cycle=cycle_count;
 	  	  	  		}
-	  	  	  	pushvalue(beat_per_mins,pressed);
 	  	  	  	if(warning>10)
 	  	  	  	{
-	  	  	  		pushWarning(beat_per_mins);
+	  	  	  		pushWarning(beat_per_mins());
 	  	  	  		pressed=true;
 	  	  	  	}
-	  	  	  	  if(((cycle_count-warning_cycle)%10==0)&&warning!=0)
+	  	  	  	  if(((cycle_count-warning_cycle)%1000==0)&&warning!=0)
 	  	  	  	  {
 	  	  	  		  warning--;
 
 	  	  	  	  }
-	  	  	  	if(((cycle_count)%20==0))
+	  	  	  	if(((cycle_count)%1000==0))
 	  	  	  		  	  {
 	  	  	  		  		  pressed=false;
 
@@ -320,15 +512,17 @@ int main(void)
 
 	  	  	  		  	  }
 	  	  	  	  cycle_count++;
-	  	  	  	//pushvalue(beat_per_mins,pressed);
-	  	  	  	  if(Time.size()>20)
-	  	  	  	  {
-	  	  	  	     Time.erase(Time.begin(), Time.end() - 1);
-	  	  	  	  }
 	  	  	  if(pressed==false)
 	  	  	  	  {
 	  	  	  	  	  	  pressed=Button_press();
 	  	  	  	  }
+	  	  	if(cycle_count==(UINT_MAX-15))
+	  	  	{
+	  	  		cycle_count=0;
+	  	  	}
+	  	  //count++;
+	  	enable_delay();
+	  	delay(168000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
