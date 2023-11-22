@@ -345,6 +345,53 @@ void pushWarning(long n)
 //	delay(1680000);
 //}
 //}
+//int test()
+//{
+//	const float rThreshold = 0.7;
+//	const float decayRate = 0.01;
+//	const float thrRate = 0.05;
+//	const int minDiff = 5;
+//	float maxValue = 0;
+//	float minValue = 1024;
+//	float threshold = 512;
+//	long lastHeartbeat = 0;
+//	int lastValue = 1024;
+//	while(1)
+//	{
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+//		HAL_ADC_Start(&hadc1);
+//		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//		int currentValue = HAL_ADC_GetValue(&hadc1);
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//		maxValue = std::max(maxValue, currentValue);
+//		minValue = std::min(minValue, currentValue);
+//		float nthreshold = (maxValue - minValue) * rThreshold + minValue;
+//		  threshold = threshold * (1-thrRate) + nthreshold * thrRate;
+//		  threshold = std::min(maxValue, max(minValue, threshold));
+//		  if(currentValue >= threshold
+//		        && lastValue < threshold
+//		        && (maxValue-minValue) > minDiff
+//		        && HAL_GetTick() - lastHeartbeat > 300)
+//		  {
+//
+//		      if(lastHeartbeat != 0) {
+//		        // Show Results
+//		        int bpm = 60000/(HAL_GetTick() - lastHeartbeat);
+//		        if(bpm > 50 && bpm < 250) {
+//		          beat[p]
+//		        }
+//		      }
+//		      lastHeartbeat = HAL_GetTick();
+//		    }
+//
+//		    // Decay for max/min
+//		    maxValue -= (maxValue-currentValue)*decayRate;
+//		    minValue += (currentValue-minValue)*decayRate;
+//
+//		    lastValue = currentValue;
+//		    delay(20);
+//	}
+//}
 /* USER CODE END 0 */
 
 /**
@@ -386,15 +433,24 @@ int main(void)
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_buf,ADC_BUF_LED);
   std::vector<long> Time{0};
   unsigned int count{0};
-  const float Threshold = 0.7;
-  	const int min_diff = 10;
-  	int const buffer{250};
-  	int nsap=0;
-  	int index=0;
-  	int sample_buffer[buffer];
-  	long last=0;
-  	int max_value=0;
-  	int min_value=1024;
+	const float rThreshold = 0.7;
+	const float decayRate = 0.01;
+	const float thrRate = 0.05;
+	const int minDiff = 5;
+	int maxValue = 0;
+	int minValue = 1024;
+	int threshold = 512;
+	long lastHeartbeat = 0;
+	int lastValue = 1024;
+//  const float Threshold = 0.7;
+//  	const int min_diff = 10;
+//  	int const buffer{100};
+//  	int nsap=0;
+//  	int index=0;
+//  	int sample_buffer[buffer];
+//  	long last=HAL_GetTick();
+//  	int max_value=0;
+//  	int min_value=1024;
   //unsigned int cycle;
   /* USER CODE END 2 */
 
@@ -417,73 +473,120 @@ int main(void)
   //long time2_beat{peak_finder()};
   while (1)
   {
-	  	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-	  	HAL_ADC_Start(&hadc1);
-	  	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-	  	sample_buffer[index] = HAL_ADC_GetValue(&hadc1);
-	  	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-	  	if(nsap>=buffer&&(HAL_GetTick()-last)>500)
-	  	{
-	  		last=HAL_GetTick();
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+	  		HAL_ADC_Start(&hadc1);
+	  		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+	  		int currentValue = HAL_ADC_GetValue(&hadc1);
+	  		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+	  		maxValue = std::max(maxValue, currentValue);
+	  		minValue = std::min(minValue, currentValue);
+	  		float nthreshold = (maxValue - minValue) * rThreshold + minValue;
+	  		  threshold = threshold * (1-thrRate) + nthreshold * thrRate;
+	  		  threshold = std::min(maxValue, std::max(minValue, threshold));
+	  		  if(currentValue >= threshold
+	  		        && lastValue < threshold
+	  		        && (maxValue-minValue) > minDiff
+	  		        && HAL_GetTick() - lastHeartbeat > 300)
+	  		  {
 
-	  	int max_value=0;
-	  	int min_value=1024;
-	  	for(int i = 0; i <buffer; i++)
-	  	{
-	  	      max_value = std::max(sample_buffer[i], max_value);
-	  	      min_value = std::min(sample_buffer[i], min_value);
-	  	}
-	  	float difference=std::max(max_value-min_value,min_diff);
-	  	float threshold = difference * Threshold + min_value;
-	  	int heart_beata{0};
-	  	int heart_beatb{0};
-	  	int heart_beatc{0};
-	  	for(int i = 1; i < buffer; i++)
-	  	{
-	  		if(sample_buffer[(index+i+1)%buffer] >= threshold && sample_buffer[(index+i)%buffer] < threshold)
-	  		{
-	  			if(heart_beatc && i-heart_beatc > 15 && i-heart_beatc < 150)
-	  			{
-	  			heart_beatb += i-heart_beatc;
-	  			heart_beata++;
-	  			}
-	  			heart_beatc = i;
-	  		}
-	  		int bpm = 60000 * heart_beata / (heart_beatb * 20);
-	  		if(heart_beata>3)
-	  		{
-	  			heart[count]=bpm;
-	  			count++;
-				if(count==100)
-				{
-					count=0;
-					compaired=true;
-				}
-	  			pushvalue(heart[count],pressed);
+	  		      if(lastHeartbeat != 0) {
+	  		        // Show Results
+	  		        int bpm = 60000/(HAL_GetTick() - lastHeartbeat);
+	  		        if(bpm > 20 && bpm < 250) {
+	  		        	pushvalue(bpm,true);
+	  		        	count++;
+	  		        	if(count==100)
+						{
+							count=0;
+							compaired=true;
+						}
+	  		        	heart[count]=bpm;
 
-	  		}
-	  	}
-	  	}
-	  	else
-	  	{
-	  		nsap++;
-	  	}
-	  	index=(index+1)%buffer;
+
+	  		        }
+	  		      }
+	  		      lastHeartbeat = HAL_GetTick();
+	  		    }
+
+	  		    // Decay for max/min
+	  		    maxValue -= (maxValue-currentValue)*decayRate;
+	  		    minValue += (currentValue-minValue)*decayRate;
+
+	  		    lastValue = currentValue;
+	  		    //delay(20);
+
+//	  	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+//	  	HAL_ADC_Start(&hadc1);
+//	  	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//	  	sample_buffer[index] = HAL_ADC_GetValue(&hadc1);
+//	  	long h=HAL_GetTick();
+//	  	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//	  	if(nsap>=buffer&&(h-last)>500)
+//	  	{
+//	  		last=HAL_GetTick();
+//
+//	  	max_value=0;
+//	  	min_value=1024;
+//	  	for(int i = 0; i <buffer; i++)
+//	  	{
+//	  	      max_value = std::max(sample_buffer[i], max_value);
+//	  	      min_value = std::min(sample_buffer[i], min_value);
+//	  	}
+//	  	float difference=std::max(max_value-min_value,min_diff);
+//	  	float threshold = difference * Threshold + min_value;
+//	  	int heart_beata{0};
+//	  	int heart_beatb{0};
+//	  	int heart_beatc{0};
+//	  	for(int i = 1; i < buffer; i++)
+//	  	{
+//	  		if(sample_buffer[(index+i+1)%buffer] >= threshold && sample_buffer[(index+i)%buffer] < threshold)
+//	  		{
+//	  			if(heart_beatc && i-heart_beatc > 15 && i-heart_beatc < 150)
+//	  			{
+//	  			heart_beatb += i-heart_beatc;
+//	  			heart_beata++;
+//	  			}
+//	  			heart_beatc = i;
+//	  		}
+//	  		int bpm = 60000 * heart_beata / (heart_beatb * 20);
+//	  		if(heart_beata>2)
+//	  		{
+//	  			heart[count]=bpm;
+//	  			count++;
+//				if(count==100)
+//				{
+//					count=0;
+//					compaired=true;
+//				}
+//	  			pushvalue(heart[count],true);
+//
+//	  		}
+//	  	}
+//	  	}
+//	  	else
+//	  	{
+//	  		nsap++;
+//	  	}
+//	  	index=(index+1)%buffer;
 	  if(pressed==false)
 	  {
 	  	pressed=Button_press();
 	  }
 	  //heart[count]=beat_per_mins();
+	  if(count>0)
+	  {
 	  pushvalue(heart[count],pressed);
+	  }
 //	  if(count==100)
 //	  {
 //		  count=0;
 //		  compaired=true;
 //
 //	  }
-
-	  	  	  	//cycle++;
-	  	  pushvalue(heart[count],pressed);
+if(count>0)
+	  {
+	  pushvalue(heart[count],pressed);
+	  }
 	  	  	  	  if(compaired&&(count%10==0))
 	  	  	  	  {
 	  	  	  		  mean_rate=mean(heart,cap);
@@ -504,7 +607,7 @@ int main(void)
 	  	  	  		  warning--;
 
 	  	  	  	  }
-	  	  	  	if(((cycle_count)%1000==0))
+	  	  	  	if(((cycle_count)%100==0))
 	  	  	  		  	  {
 	  	  	  		  		  pressed=false;
 
@@ -520,7 +623,11 @@ int main(void)
 	  	  	{
 	  	  		cycle_count=0;
 	  	  	}
-	  	  //count++;
+	  	  if(count>0)
+	  	  	  {
+	  	  	  pushvalue(heart[count],pressed);
+	  	  	  }
+//	  	  //count++;
 	  	enable_delay();
 	  	delay(168000);
     /* USER CODE END WHILE */
