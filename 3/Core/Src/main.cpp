@@ -67,7 +67,8 @@ static void MX_I2C1_Init(void);
 void delay(uint32_t tick);
 bool Button_press();
 long peak_finder();
-void pushvalue(int n,bool a);
+void pushvalue(long long n,bool a);
+//void pushvalue(long n,bool a);
 void enable_delay(void);
 void pushWarning(int n);
 /* USER CODE END PFP */
@@ -109,43 +110,55 @@ long peak_finder()
 	//bool peak{true};
 	//delay(times);
 	std::vector<long long> slops{};
-	unsigned long reader{};
-	unsigned long recorder[5]{0};
+	long long reader{};
+	long long recorder[5]{};
+	//long n {};
+	long long a=0;
 	while(true)
 	{
 		unsigned long now=HAL_GetTick();
-		unsigned int n =0;
+		//unsigned int n =0;
 		unsigned long start=HAL_GetTick();
-		for(int p{0};p<5;p++)
+		for(int p{0};p<2;p++)
 		{
-			while(now<(start+20))
-		{
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		reader += HAL_ADC_GetValue(&hadc1);
-		n++;
-		now=HAL_GetTick();
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		}
-			reader/=n;
+			reader=0;
+			for(int n{0};now<(start+60);n++)				//reader=0				//for(long long n{0};n<200;n++)
+			{
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+				HAL_ADC_Start(&hadc1);
+				HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+				//pushvalue(HAL_ADC_GetValue(&hadc1),true);
+				reader=reader+ HAL_ADC_GetValue(&hadc1);
+				//pushvalue(n,true);
+				//++n;
+				a=n;
+				//pushvalue(a,true);
+				now=HAL_GetTick();
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+			}
+			//if(reader=)
+			reader=reader/a;
+
+			//if(HAL_GetTick()>now+300)
+			//{
+				//pushvalue(recorder[p],true);
+			//}
+
 			recorder[p]=reader;
+			//pushvalue(recorder[p],true);
 			//return millies;
 		}
-		//HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		//raw = HAL_ADC_GetValue(&hadc1);
-		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		//delay(times);
-		//HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		//raw2=HAL_ADC_GetValue(&hadc1);
-		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		long long slope{(recorder[4]-recorder[0])};
+		//pushvalue(reader,true);
+		long long slope{(recorder[0]-recorder[1])};
+		pushvalue(slope,true);
+		//pushvalue(slope,true);
+		//pushvalue(reader,true);
 
 		slops.push_back(slope);
 		if(	slops[slops. size()-2]>0&&slops[slops.size()-1]<0)
 		{
 			millis = HAL_GetTick();
-			return millis;
+			//return millis;
 		}
 		if(slops.size()>10)
 		{
@@ -178,7 +191,31 @@ bool Button_press()
 		 }
 	 return false;
 }
-void pushvalue(int n,bool a)
+//void pushvalue(int n,bool a)
+//{
+//	if(a==true)
+//	{
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+//		HAL_ADC_Start(&hadc1);
+//		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//		int reader = HAL_ADC_GetValue(&hadc1);
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+//
+//		i2cLcd_Init(&h_lcd);
+//		i2cLcd_ClearDisplay(&h_lcd);
+//		std::string s = std::to_string(reader);
+//		std::size_t i =0;
+//		while(s[i])
+//		{
+//			  i2cLcd_SendChar(&h_lcd, s[i]);
+//	  //HAL_Delay(100);
+//			  i++;
+//		}
+//		//delete [] str;
+//	}
+//
+//}
+void pushvalue(long long n,bool a)
 {
 	if(a==true)
 	{
@@ -191,6 +228,7 @@ void pushvalue(int n,bool a)
 		i2cLcd_Init(&h_lcd);
 		i2cLcd_ClearDisplay(&h_lcd);
 		std::string s = std::to_string(n);
+		//std::string s = std::to_string(reader);
 		std::size_t i =0;
 		while(s[i])
 		{
@@ -248,7 +286,7 @@ void pushWarning(int n)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t i2c_lcd_addr = (0x27<<1);
+	//uint8_t i2c_lcd_addr = (0x27<<1);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -271,7 +309,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-  //uint8_t i2c_lcd_addr = (0x27<<1);
+  uint8_t i2c_lcd_addr = (0x27<<1);
   MX_USART1_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
@@ -308,6 +346,7 @@ int main(void)
 	  start=HAL_GetTick();
 
 	  //pushvalue(beat_per_mins,pressed);
+	  //pushvalue(time_beat/1000,pressed);
 	  //pushvalue(time_beat/1000,pressed);
 	  //HAL_Delay(400);
 	  if(pressed==false)
